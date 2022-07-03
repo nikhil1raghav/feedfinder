@@ -3,7 +3,15 @@ package values
 var FeedHeaders = []string{"<rdf", "<rss", "<feed"}
 var FeedUrlSuffix = []string{".rss", ".atom", ".xml", ".rdf"}
 var FeedLike = []string{"rss", "feed", "atom", "rdf", "xml"}
-var GuessWords = []string{"atom.xml", "index.xml", "index.atom", "index.rdf", "rss.xml", "index.rss"}
+
+var GuessWords = []string{
+	"atom.xml",
+	"index.xml",
+	"index.atom",
+	"index.rdf",
+	"rss.xml",
+	"index.rss",
+}
 
 var FeedTypes = []string{
 	"application/rss+xml",
