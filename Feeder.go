@@ -25,6 +25,9 @@ type FeedFinder struct {
 func NewFeedFinder(options ...func(*FeedFinder)) *FeedFinder {
 	f := &FeedFinder{}
 	f.Init()
+	for _, fn := range options {
+		fn(f)
+	}
 
 	return f
 }
@@ -138,6 +141,7 @@ func (f *FeedFinder) FindFeeds(url string) ([]string, error) {
 			filteredUrl = append(filteredUrl, anchor)
 		}
 	}
+
 	for _, u := range filteredUrl {
 		if validFeed, _ := f.isFeed(u); validFeed {
 			feedUrls = append(feedUrls, u)
@@ -147,7 +151,6 @@ func (f *FeedFinder) FindFeeds(url string) ([]string, error) {
 	if len(feedUrls) > 0 && !f.CheckAll {
 		return feedUrls, nil
 	}
-
 	feedUrls = append(feedUrls, f.guessUrls(url)...)
 
 	return feedUrls, nil
