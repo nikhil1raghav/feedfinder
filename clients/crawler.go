@@ -16,10 +16,15 @@ type Crawler struct {
 
 func (c *Crawler) TypePass(u string) []string {
 	links := make([]string, 0)
+	base, err := url.Parse(u)
+	if err != nil {
+		log.Println("Error parsing url", err)
+	}
 	c.OnHTML("link[type]", func(e *colly.HTMLElement) {
 		for _, linkType := range values.FeedTypes {
 			if e.Attr("type") == linkType {
-				links = append(links, e.Attr("href"))
+				feedUrl, _ := url.Parse(e.Attr("href"))
+				links = append(links, base.ResolveReference(feedUrl).String())
 			}
 		}
 	})

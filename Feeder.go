@@ -105,6 +105,7 @@ func (f *FeedFinder) guessUrls(u string) []string {
 			log.Println(err)
 			continue
 		} else if validFeed, _ := f.isFeed(url); validFeed {
+
 			guessed = append(guessed, url)
 		}
 	}
