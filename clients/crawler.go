@@ -40,16 +40,20 @@ func (c *Crawler) GetAllAnchors(u string) []string {
 		log.Println("Error parsing url", err)
 		return []string{}
 	}
+	log.Println("Getting all anchors")
 
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		if strings.Count(e.Attr("href"), "://") > 0 {
 			anchors = append(anchors, e.Attr("href"))
 		} else {
+			log.Println("Got this local url", e.Attr("href"))
 			localUrl, err := url.Parse(e.Attr("href"))
 			if err != nil {
 				log.Println("error parsing local url", err)
 			} else {
+
 				anchors = append(anchors, base.ResolveReference(localUrl).String())
+				log.Println("Appended", base.ResolveReference(localUrl).String())
 			}
 		}
 	})
