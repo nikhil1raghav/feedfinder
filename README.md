@@ -60,7 +60,6 @@ func main() {
 ```
 
 
-Right now it uses [colly](http://go-colly.org/) for crawling webpages but plan is to use something lightweight. Code is written such that swapping out crawler is easy.
 
 
 
