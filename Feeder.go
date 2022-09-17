@@ -1,24 +1,20 @@
 package feedfinder
 
 import (
-	"io/ioutil"
+	"github.com/PuerkitoBio/goquery"
 	"log"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/nikhil1raghav/feedfinder/clients"
 	"github.com/nikhil1raghav/feedfinder/utils"
 	"github.com/nikhil1raghav/feedfinder/values"
-
-	"github.com/gocolly/colly"
 )
 
 type FeedFinder struct {
 	UserAgent  string
 	TimeOut    time.Duration
 	CheckAll   bool
-	HttpClient http.Client
 	Crawler    clients.Crawler
 }
 
@@ -45,27 +41,26 @@ func CheckAll(checkall bool) func(*FeedFinder) {
 func TimeOut(timeout time.Duration) func(*FeedFinder) {
 	return func(f *FeedFinder) {
 		f.TimeOut = timeout
+		f.Crawler.Timeout = timeout
 	}
 }
 func (f *FeedFinder) Init() {
 	f.UserAgent = values.ChromeUserAgent
 	f.CheckAll = false
-	f.TimeOut = 60
-	f.Crawler.Collector = colly.NewCollector(colly.UserAgent(f.UserAgent))
+	f.TimeOut = 60*time.Second
+	f.Crawler = *clients.NewCrawler(f.UserAgent, f.TimeOut)
 }
-func (f *FeedFinder) getFeed(url string) ([]byte, error) {
-	req, _ := http.NewRequest(http.MethodGet, url, nil)
-	req.Header.Set("User-Agent", f.UserAgent)
-	resp, err := f.HttpClient.Get(url)
+func (f *FeedFinder) getFeed(url string) (string, error) {
+	resp, err := f.Crawler.Get(url)
 	if err != nil {
 		log.Printf("Error getting %s, %s", url, err.Error())
-		return nil, err
+		return "", err
 	}
-	return ioutil.ReadAll(resp.Body)
+	return resp,nil
 }
 
-func (f *FeedFinder) isFeedData(data []byte) bool {
-	dataString := strings.ToLower(string(data))
+func (f *FeedFinder) isFeedData(data string) bool {
+	dataString := strings.ToLower(data)
 	if strings.Count(dataString, "<html") > 0 {
 		return false
 	}
@@ -126,14 +121,24 @@ func (f *FeedFinder) FindFeeds(url string) ([]string, error) {
 	if validFeed, _ := f.isFeed(url); validFeed {
 		feedUrls = append(feedUrls, url)
 	}
+	data, err:= f.Crawler.Get(url)
+	if err!=nil{
+		log.Println("Couldn't parse the page ",err)
+		return []string{}, err
+	}
+	htmlDoc, err:=goquery.NewDocumentFromReader(strings.NewReader(data))
+	if err!=nil{
+		log.Println("Error converting to goquery doc", err)
+		return []string{},err
+	}
 
-	feedUrls = append(feedUrls, f.Crawler.TypePass(url)...)
+	feedUrls = append(feedUrls, f.Crawler.TypePass(htmlDoc,url)...)
 
 	if len(feedUrls) > 0 && !f.CheckAll {
 		return feedUrls, nil
 	}
 
-	anchors := f.Crawler.GetAllAnchors(url)
+	anchors := f.Crawler.GetAllAnchors(htmlDoc, url)
 	filteredUrl := make([]string, 0)
 	for _, anchor := range anchors {
 		if f.isFeedUrl(anchor) {

@@ -14,9 +14,9 @@ func main() {
 	f := feedfinder.NewFeedFinder(
 		feedfinder.UserAgent(values.ChromeUserAgent),
 		feedfinder.CheckAll(true),
-		feedfinder.TimeOut(10*time.Second),
+		feedfinder.TimeOut(100*time.Second),
 	)
-	url := flag.String("URL", "https://raghavnikhil.com/", "url to find feeds for")
+	url := flag.String("URL", "https://lukesmith.xyz/", "url to find feeds for")
 	flag.Parse()
 	links, _ := f.FindFeeds(*url)
 	for _, link := range links {
